@@ -1,0 +1,28 @@
+{
+    "agents": [
+        "claude_code",
+        "copilot",
+        "opencode",
+        "cursor",
+        "codex"
+    ],
+    "cloud": false,
+    "guidelines": true,
+    "mcp": true,
+    "nightwatch": false,
+    "packages": [
+        "livewire/blaze"
+    ],
+    "sail": false,
+    "skills": [
+        "infer-conventions",
+        "ai-sdk-development",
+        "fortify-development",
+        "laravel-best-practices",
+        "fluxui-development",
+        "livewire-development",
+        "pest-testing",
+        "tailwindcss-development",
+        "blaze-optimize"
+    ]
+}
