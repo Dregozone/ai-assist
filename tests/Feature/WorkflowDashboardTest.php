@@ -45,6 +45,31 @@ it('renders the full graph for a workflow that has tasks', function () {
         ->assertSee('PostProcessor');
 });
 
+it('shows the output button and result content for a finished run', function () {
+    $workflow = Workflow::factory()->create([
+        'status' => WorkflowStatus::Succeeded,
+        'optimized_prompt' => 'Write a launch email.',
+        'post_success' => true,
+        'post_summary' => 'The launch email is complete.',
+    ]);
+    $workflow->tasks()->create([
+        'key' => 't1',
+        'title' => 'Draft the email',
+        'description' => 'Write the body',
+        'depends_on' => [],
+        'status' => TaskStatus::Completed,
+        'output' => 'Subject: Meet our new blend! Dear friend, ...',
+        'completed_at' => now(),
+    ]);
+
+    Livewire::test('pages::workflow')
+        ->set('workflowId', $workflow->id)
+        ->assertOk()
+        ->assertSee('Output')
+        ->assertSee('The launch email is complete.')
+        ->assertSee('Meet our new blend!');
+});
+
 it('validates that input is required', function () {
     Livewire::test('pages::workflow')
         ->set('input', '')

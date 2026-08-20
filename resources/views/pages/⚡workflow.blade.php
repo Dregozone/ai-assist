@@ -223,7 +223,7 @@ new #[Layout('layouts.workflow')] #[Title('AI Workflow Visualiser')] class exten
     }
 }; ?>
 
-<div class="mx-auto min-h-screen w-full max-w-7xl px-4 py-8"
+<div class="mx-auto min-h-screen w-10/12 px-4 py-8"
      x-data="{
         tip: null, x: 0, y: 0,
         showTip(e) { this.tip = e.currentTarget.dataset.tip || '(no content yet)'; this.move(e); },
@@ -264,9 +264,16 @@ new #[Layout('layouts.workflow')] #[Title('AI Workflow Visualiser')] class exten
     @if ($w)
         <div class="mb-6">
             <div class="mb-2 flex items-center justify-between text-sm">
-                <flux:badge :color="$w->status === WorkflowStatus::Failed ? 'red' : ($w->status === WorkflowStatus::Succeeded ? 'green' : 'blue')">
-                    {{ $w->status->label() }}
-                </flux:badge>
+                <div class="flex items-center gap-2">
+                    @if ($w->status->isTerminal())
+                        <flux:modal.trigger name="output">
+                            <flux:button size="sm" variant="primary" icon="document-text">Output</flux:button>
+                        </flux:modal.trigger>
+                    @endif
+                    <flux:badge :color="$w->status === WorkflowStatus::Failed ? 'red' : ($w->status === WorkflowStatus::Succeeded ? 'green' : 'blue')">
+                        {{ $w->status->label() }}
+                    </flux:badge>
+                </div>
                 <span class="text-zinc-500">
                     {{ $w->tasks->whereIn('status', [TaskStatus::Completed, TaskStatus::Failed])->count() }}/{{ $w->tasks->count() }} tasks
                 </span>
@@ -350,6 +357,41 @@ new #[Layout('layouts.workflow')] #[Title('AI Workflow Visualiser')] class exten
                 @endforeach
             </div>
         </div>
+    @endif
+
+    {{-- Result modal --}}
+    @if ($w)
+        <flux:modal name="output" class="w-full max-w-2xl">
+            <div class="space-y-4"
+                 x-data="{ copied: false, copy() { navigator.clipboard.writeText($refs.out.innerText); this.copied = true; setTimeout(() => this.copied = false, 1500); } }">
+                <div class="flex items-center justify-between">
+                    <flux:heading size="lg">Result</flux:heading>
+                    <flux:button size="sm" variant="ghost" icon="clipboard" x-on:click="copy()">
+                        <span x-text="copied ? 'Copied!' : 'Copy'"></span>
+                    </flux:button>
+                </div>
+
+                @if ($w->post_summary)
+                    <div class="rounded-lg border px-3 py-2 text-sm
+                                {{ $w->post_success
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                    : 'border-red-300 bg-red-50 text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300' }}">
+                        {{ $w->post_summary }}
+                    </div>
+                @endif
+
+                <div x-ref="out" class="max-h-[60vh] space-y-4 overflow-y-auto">
+                    @forelse ($w->tasks->filter(fn ($task) => filled($task->output)) as $task)
+                        <div>
+                            <div class="mb-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200">{{ $task->title }}</div>
+                            <div class="whitespace-pre-wrap rounded-lg bg-zinc-50 p-3 text-sm leading-relaxed text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">{{ $task->output }}</div>
+                        </div>
+                    @empty
+                        <p class="text-sm text-zinc-500">No output was produced for this run.</p>
+                    @endforelse
+                </div>
+            </div>
+        </flux:modal>
     @endif
 
     {{-- Shared hover tooltip --}}
