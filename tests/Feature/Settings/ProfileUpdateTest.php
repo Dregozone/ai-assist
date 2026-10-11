@@ -43,6 +43,21 @@ test('email verification status is unchanged when email address is unchanged', f
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
+test('profile information is validated', function () {
+    $taken = User::factory()->create();
+    $user = User::factory()->create(['name' => 'Original']);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::settings.profile')
+        ->set('name', '')
+        ->set('email', $taken->email)
+        ->call('updateProfileInformation')
+        ->assertHasErrors(['name', 'email']);
+
+    expect($user->refresh()->name)->toEqual('Original');
+});
+
 test('user can delete their account', function () {
     $user = User::factory()->create();
 

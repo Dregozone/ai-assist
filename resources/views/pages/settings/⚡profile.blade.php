@@ -1,6 +1,6 @@
 <?php
 
-use App\Concerns\ProfileValidationRules;
+use App\Actions\Fortify\UpdateUserProfileInformation;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -9,8 +9,6 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Profile settings')] class extends Component {
-    use ProfileValidationRules;
-
     public string $name = '';
     public string $email = '';
 
@@ -26,19 +24,12 @@ new #[Title('Profile settings')] class extends Component {
     /**
      * Update the profile information for the currently authenticated user.
      */
-    public function updateProfileInformation(): void
+    public function updateProfileInformation(UpdateUserProfileInformation $updater): void
     {
-        $user = Auth::user();
-
-        $validated = $this->validate($this->profileRules($user->id));
-
-        $user->fill($validated);
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
+        $updater->update(Auth::user(), [
+            'name' => $this->name,
+            'email' => $this->email,
+        ]);
 
         Flux::toast(variant: 'success', text: __('Profile updated.'));
     }
