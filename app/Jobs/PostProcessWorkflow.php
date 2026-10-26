@@ -8,8 +8,6 @@ use App\Events\WorkflowUpdated;
 use App\Models\Workflow;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Laravel\Ai\Responses\StructuredAgentResponse;
-use RuntimeException;
 use Throwable;
 
 class PostProcessWorkflow implements ShouldQueue
@@ -33,10 +31,6 @@ class PostProcessWorkflow implements ShouldQueue
         WorkflowUpdated::dispatch($workflow);
 
         $response = (new PostProcessorAgent)->prompt($this->buildPrompt($workflow));
-
-        if (! $response instanceof StructuredAgentResponse) {
-            throw new RuntimeException('The post-processor did not return structured output.');
-        }
 
         $success = (bool) $response['success'];
 

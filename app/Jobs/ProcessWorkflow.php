@@ -11,8 +11,6 @@ use App\Services\WorkflowOrchestrator;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Arr;
-use Laravel\Ai\Responses\StructuredAgentResponse;
-use RuntimeException;
 use Throwable;
 
 class ProcessWorkflow implements ShouldQueue
@@ -36,10 +34,6 @@ class ProcessWorkflow implements ShouldQueue
         WorkflowUpdated::dispatch($workflow);
 
         $response = (new ProcessorAgent)->prompt((string) $workflow->optimized_prompt);
-
-        if (! $response instanceof StructuredAgentResponse) {
-            throw new RuntimeException('The processor did not return structured output.');
-        }
 
         foreach ($response['tasks'] ?? [] as $index => $task) {
             $workflow->tasks()->create([
