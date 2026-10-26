@@ -8,8 +8,6 @@ use App\Events\WorkflowUpdated;
 use App\Models\Workflow;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Laravel\Ai\Responses\StructuredAgentResponse;
-use RuntimeException;
 use Throwable;
 
 class PreProcessWorkflow implements ShouldQueue
@@ -39,10 +37,6 @@ class PreProcessWorkflow implements ShouldQueue
         WorkflowUpdated::dispatch($workflow);
 
         $response = (new PreProcessorAgent)->prompt($workflow->input_text);
-
-        if (! $response instanceof StructuredAgentResponse) {
-            throw new RuntimeException('The pre-processor did not return structured output.');
-        }
 
         $workflow->update(['optimized_prompt' => $response['optimized_prompt']]);
         WorkflowUpdated::dispatch($workflow);
